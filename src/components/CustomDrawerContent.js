@@ -1,53 +1,41 @@
-// src/components/CustomDrawerContent.js
-import { DrawerContentScrollView, DrawerItem } from '@react-navigation/drawer';
+import {
+    DrawerContentScrollView,
+    DrawerItem,
+    DrawerItemList,
+} from '@react-navigation/drawer';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Avatar, Caption, Title } from 'react-native-paper';
+import { Avatar, Caption, Title, useTheme } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const CustomDrawerContent = (props) => {
+    const { signOut } = props;
+    const theme = useTheme();
+
     return (
         <DrawerContentScrollView {...props}>
             <View style={styles.drawerContent}>
                 <View style={styles.userInfoSection}>
                     <Avatar.Image
-                        source={require('../assets/images/avatar.png')}
+                        source={{
+                            uri: 'https://ui-avatars.com/api/?name=Admin&background=2196F3&color=fff',
+                        }}
                         size={50}
                     />
-                    <Title style={styles.title}>Nome do Usuário</Title>
-                    <Caption style={styles.caption}>usuario@email.com</Caption>
+                    <Title style={styles.title}>Admin</Title>
+                    <Caption style={styles.caption}>admin@logitrack.com</Caption>
                 </View>
 
-                <View style={styles.drawerSection}>
-                    <DrawerItem
-                        icon={({ color, size }) => (
-                            <Icon name="home-outline" color={color} size={size} />
-                        )}
-                        label="Dashboard"
-                        onPress={() => props.navigation.navigate('Dashboard')}
-                    />
-                    <DrawerItem
-                        icon={({ color, size }) => (
-                            <Icon name="robot-outline" color={color} size={size} />
-                        )}
-                        label="Robôs"
-                        onPress={() => props.navigation.navigate('Robôs')}
-                    />
-                    <DrawerItem
-                        icon={({ color, size }) => (
-                            <Icon name="truck-delivery-outline" color={color} size={size} />
-                        )}
-                        label="Entregas"
-                        onPress={() => props.navigation.navigate('Entregas')}
-                    />
-                    <DrawerItem
-                        icon={({ color, size }) => (
-                            <Icon name="account-outline" color={color} size={size} />
-                        )}
-                        label="Perfil"
-                        onPress={() => props.navigation.navigate('Perfil')}
-                    />
-                </View>
+                <DrawerItemList {...props} />
+
+                <DrawerItem
+                    icon={({ color, size }) => (
+                        <Icon name="exit-to-app" color={color} size={size} />
+                    )}
+                    label="Sair"
+                    onPress={signOut}
+                    style={styles.logoutButton}
+                />
             </View>
         </DrawerContentScrollView>
     );
@@ -59,8 +47,9 @@ const styles = StyleSheet.create({
     },
     userInfoSection: {
         paddingLeft: 20,
-        paddingTop: 20,
-        paddingBottom: 20,
+        paddingVertical: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f4f4f4',
     },
     title: {
         marginTop: 10,
@@ -70,8 +59,8 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 14,
     },
-    drawerSection: {
-        marginTop: 15,
+    logoutButton: {
+        marginTop: 'auto',
     },
 });
 

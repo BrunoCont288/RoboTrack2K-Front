@@ -1,75 +1,71 @@
-// src/context/AuthContext.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-export const AuthContext = createContext();
+const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [userToken, setUserToken] = useState(null);
-    const [userInfo, setUserInfo] = useState(null);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(false);
 
-    const login = (email, password) => {
-        setIsLoading(true);
-        // Substitua pela sua chamada de API real
-        axios.post('https://seuservidor.com/login', { email, password })
-            .then(response => {
-                let userInfo = response.data;
-                setUserInfo(userInfo);
-                setUserToken(userInfo.token);
-
-                AsyncStorage.setItem('userInfo', JSON.stringify(userInfo));
-                AsyncStorage.setItem('userToken', userInfo.token);
-
-                setIsLoading(false);
-            })
-            .catch(e => {
-                console.log(`Login error ${e}`);
-                setIsLoading(false);
-            });
-    };
-
-    const logout = () => {
-        setIsLoading(true);
-        setUserToken(null);
-        AsyncStorage.removeItem('userToken');
-        AsyncStorage.removeItem('userInfo');
-        setIsLoading(false);
-    };
-
-    const isLoggedIn = async () => {
+    const signIn = async (email, password) => {
         try {
-            setIsLoading(true);
-            let userToken = await AsyncStorage.getItem('userToken');
-            let userInfo = await AsyncStorage.getItem('userInfo');
-            userInfo = JSON.parse(userInfo);
-
-            if (userInfo) {
-                setUserToken(userToken);
-                setUserInfo(userInfo);
+            setLoading(true);
+            // Mock de autenticação - substituir pela chamada real da API
+            if (email === 'admin@logitrack.com' && password === 'admin123') {
+                const mockUser = {
+                    id: 1,
+                    email: 'admin@logitrack.com',
+                    name: 'Administrador',
+                };
+                await AsyncStorage.setItem('@LogiTrack:user', JSON.stringify(mockUser));
+                setUser(mockUser);
+                return true;
             }
-            setIsLoading(false);
-        } catch (e) {
-            console.log(`isLogged in error ${e}`);
+            return false;
+        } catch (error) {
+            console.error('Erro ao fazer login:', error);
+            return false;
+        } finally {
+            setLoading(false);
         }
     };
 
-    useEffect(() => {
-        isLoggedIn();
-    }, []);
+    const signOut = async () => {
+        await AsyncStorage.removeItem('@LogiTrack:user');
+        setUser(null);
+    };
+
+    const loadStoredData = async () => {
+        try {
+            const storedUser = await AsyncStorage.getItem('@LogiTrack:user');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        } catch (error) {
+            console.error('Erro ao carregar dados armazenados:', error);
+        }
+    };
 
     return (
         <AuthContext.Provider
             value={{
-                login,
-                logout,
-                isLoading,
-                userToken,
-                userInfo
+                signed: !!user,
+                user,
+                loading,
+                signIn,
+                signOut,
+                loadStoredData,
             }}
         >
             {children}
         </AuthContext.Provider>
     );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    }
+    return context;
 };

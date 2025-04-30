@@ -1,52 +1,94 @@
-// src/navigation/AppNavigator.js
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { Ionicons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import React from 'react';
-import CustomDrawerContent from '../components/CustomDrawerContent';
+import React, { useEffect, useState } from 'react';
 
-// Screens
 import DashboardScreen from '../screens/DashboardScreen';
-import EntregasScreen from '../screens/EntregasScreen';
+import DeliveryScreen from '../screens/DeliveryScreen';
 import LoginScreen from '../screens/LoginScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import RobotDetailScreen from '../screens/RobotDetailScreen';
 import RobotListScreen from '../screens/RobotListScreen';
-import SensorsScreen from '../screens/SensorsScreen';
+import SensorScreen from '../screens/SensorScreen';
+import { isAuthenticated } from '../services/authService';
 
-const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
-const RobotStack = () => (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="RobotList" component={RobotListScreen} />
-        <Stack.Screen name="RobotDetail" component={RobotDetailScreen} />
-    </Stack.Navigator>
-);
+// Navegação principal com tabs
+const MainTabNavigator = () => {
+    return (
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName;
 
-const MainDrawer = () => (
-    <Drawer.Navigator
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
-        screenOptions={{
-            headerShown: false,
-            drawerActiveTintColor: '#6200ee',
-            drawerInactiveTintColor: '#333',
-        }}
-    >
-        <Drawer.Screen name="Dashboard" component={DashboardScreen} />
-        <Drawer.Screen name="Robôs" component={RobotStack} />
-        <Drawer.Screen name="Entregas" component={EntregasScreen} />
-        <Drawer.Screen name="Sensores" component={SensorsScreen} />
-        <Drawer.Screen name="Perfil" component={ProfileScreen} />
-    </Drawer.Navigator>
-);
+                    if (route.name === 'Dashboard') {
+                        iconName = focused ? 'home' : 'home-outline';
+                    } else if (route.name === 'Robôs') {
+                        iconName = focused ? 'hardware-chip' : 'hardware-chip-outline';
+                    } else if (route.name === 'Sensores') {
+                        iconName = focused ? 'analytics' : 'analytics-outline';
+                    } else if (route.name === 'Entregas') {
+                        iconName = focused ? 'cube' : 'cube-outline';
+                    } else if (route.name === 'Perfil') {
+                        iconName = focused ? 'person' : 'person-outline';
+                    }
 
+                    return <Ionicons name={iconName} size={size} color={color} />;
+                },
+                tabBarActiveTintColor: '#3498db',
+                tabBarInactiveTintColor: 'gray',
+            })}
+        >
+            <Tab.Screen name="Dashboard" component={DashboardScreen} />
+            <Tab.Screen name="Robôs" component={RobotStackNavigator} options={{ headerShown: false }} />
+            <Tab.Screen name="Sensores" component={SensorScreen} />
+            <Tab.Screen name="Entregas" component={DeliveryScreen} />
+            <Tab.Screen name="Perfil" component={ProfileScreen} />
+        </Tab.Navigator>
+    );
+};
+
+// Stack navigator para a seção de robôs
+const RobotStackNavigator = () => {
+    return (
+        <Stack.Navigator>
+            <Stack.Screen name="Lista de Robôs" component={RobotListScreen} />
+            <Stack.Screen name="Detalhes do Robô" component={RobotDetailScreen} />
+        </Stack.Navigator>
+    );
+};
+
+// Navegador principal do app
 const AppNavigator = () => {
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        // Verificar se o usuário está autenticado
+        const checkAuth = async () => {
+            const authenticated = await isAuthenticated();
+            setIsLoggedIn(authenticated);
+            setIsLoading(false);
+        };
+
+        checkAuth();
+    }, []);
+
+    if (isLoading) {
+        return null; // ou um componente de loading
+    }
+
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="Main" component={MainDrawer} />
+                {isLoggedIn ? (
+                    <Stack.Screen name="Main" component={MainTabNavigator} />
+                ) : (
+                    <Stack.Screen name="Login" component={LoginScreen} />
+                )}
             </Stack.Navigator>
         </NavigationContainer>
     );
